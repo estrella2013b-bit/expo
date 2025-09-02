@@ -4,17 +4,14 @@ import { Platform } from 'react-native';
 
 export const name = 'MediaLibrary@Next';
 
-const FILES = [
-  require('../assets/icons/app.png'),
-  require('../assets/black-128x256.png'),
-  require('../assets/qrcode_expo.jpg'),
-  require('../assets/big_buck_bunny.mp4'),
-];
-const MP3_FILES = [require('../assets/LLizard.mp3')];
+const pngPath = require('../assets/icons/app.png');
+const jpgPath = require('../assets/qrcode_expo.jpg');
+const mp4Path = require('../assets/big_buck_bunny.mp4');
+const mp3Path = require('../assets/LLizard.mp3');
 
 export async function test(t) {
   let permissions;
-  let files, mp3Files, allTypeFiles;
+  let files, filesWithAudio;
   let jpgFile, pngFile, mp4File, mp3File;
 
   const checkIfAllPermissionsWereGranted = () => {
@@ -25,16 +22,15 @@ export async function test(t) {
   };
 
   t.beforeAll(async () => {
-    files = await ExpoAsset.loadAsync(FILES);
-    mp3Files = await ExpoAsset.loadAsync(MP3_FILES);
-    pngFile = files[0];
-    jpgFile = files[2];
-    mp4File = files[3];
-    mp3File = mp3Files[0];
-    allTypeFiles = [pngFile, jpgFile, mp4File, mp3File];
+    [mp3File] = await ExpoAsset.loadAsync(mp3Path);
+    [pngFile] = await ExpoAsset.loadAsync(pngPath);
+    [jpgFile] = await ExpoAsset.loadAsync(jpgPath);
+    [mp4File] = await ExpoAsset.loadAsync(mp4Path);
+    files = [pngFile, jpgFile, mp4File];
+    filesWithAudio = [pngFile, jpgFile, mp4File, mp3File];
     permissions = await requestPermissionsAsync();
     if (!checkIfAllPermissionsWereGranted()) {
-      console.warn('Tests were skipped - not enough permissions to run them.');
+      console.warn('Tests will fail - not enough permissions to run them.');
     }
   });
 
@@ -129,7 +125,7 @@ export async function test(t) {
     t.it('fails when mixing audio and images', async () => {
       try {
         const albumName = createAlbumName('mixed audio & image');
-        const assets = await Promise.all(allTypeFiles.map((f) => Asset.create(f.localUri)));
+        const assets = await Promise.all(filesWithAudio.map((f) => Asset.create(f.localUri)));
         assetsContainer.push(assets);
         const album = await Album.create(albumName, assets);
         albumsContainer.push(album);

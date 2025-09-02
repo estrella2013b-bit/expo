@@ -2,12 +2,15 @@ package expo.modules.medialibrary.next.objects.asset.delegates
 
 import android.content.Context
 import android.net.Uri
+import android.os.Build
+import androidx.annotation.DeprecatedSinceApi
 import androidx.core.net.toUri
 import expo.modules.medialibrary.AssetFileException
 import expo.modules.medialibrary.MediaLibraryUtils
 import expo.modules.medialibrary.next.exceptions.AssetCouldNotBeCreated
 import expo.modules.medialibrary.next.exceptions.AssetInitializationException
 import expo.modules.medialibrary.next.exceptions.AssetPropertyNotFoundException
+import expo.modules.medialibrary.next.extensions.getOrThrow
 import expo.modules.medialibrary.next.extensions.resolver.deleteBy
 import expo.modules.medialibrary.next.extensions.resolver.queryAssetDisplayName
 import expo.modules.medialibrary.next.extensions.resolver.queryAssetPath
@@ -20,11 +23,16 @@ import expo.modules.medialibrary.next.objects.wrappers.MimeType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.lang.ref.WeakReference
 
-class AssetLegacyDelegate(contentUri: Uri, val context: Context) : AssetDelegate {
-  private val contentResolver by lazy {
-    context.contentResolver ?: throw AssetInitializationException("Unable to access the contentResolver")
-  }
+@DeprecatedSinceApi(Build.VERSION_CODES.Q)
+class AssetLegacyDelegate(contentUri: Uri, context: Context) : AssetDelegate {
+  private val contextRef = WeakReference(context)
+
+  private val contentResolver
+    get() = contextRef
+      .getOrThrow()
+      .contentResolver ?: throw AssetInitializationException("Unable to access the contentResolver")
 
   // This property is mutable for legacy asset and immutable for modern one.
   // In newer Android versions the contentResolver can update corresponding files in the
@@ -70,7 +78,7 @@ class AssetLegacyDelegate(contentUri: Uri, val context: Context) : AssetDelegate
       ?: throw AssetPropertyNotFoundException("Asset path")
     val newFile = File(path).safeMove(File(relativePath.toFilePath()))
     contentResolver.deleteBy(path)
-    val (_, uri) = MediaLibraryUtils.scanFile(context, arrayOf(newFile.path), null)
+    val (_, uri) = MediaLibraryUtils.scanFile(contextRef.getOrThrow(), arrayOf(newFile.path), null)
     this@AssetLegacyDelegate.contentUri = uri
       ?: throw AssetCouldNotBeCreated("Could not create a new asset while moving the old one")
   }
@@ -79,10 +87,10 @@ class AssetLegacyDelegate(contentUri: Uri, val context: Context) : AssetDelegate
     val path = contentResolver.queryAssetPath(contentUri)
       ?: throw AssetPropertyNotFoundException("Asset path")
     val newFile = File(path).safeCopy(File(relativePath.toFilePath()))
-    val (_, uri) = MediaLibraryUtils.scanFile(context, arrayOf(newFile.path), null)
+    val (_, uri) = MediaLibraryUtils.scanFile(contextRef.getOrThrow(), arrayOf(newFile.path), null)
     if (uri == null) {
       throw AssetCouldNotBeCreated("Could not create a new asset while copying the old one")
     }
-    return@withContext Asset(uri, context)
+    return@withContext Asset(uri, contextRef.getOrThrow())
   }
 }

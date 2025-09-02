@@ -5,9 +5,9 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import androidx.core.net.toUri
-import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.sharedobjects.SharedObject
 import expo.modules.medialibrary.next.exceptions.AssetPropertyNotFoundException
+import expo.modules.medialibrary.next.extensions.getOrThrow
 import expo.modules.medialibrary.next.extensions.resolver.queryAssetDisplayName
 import expo.modules.medialibrary.next.extensions.resolver.queryAssetDuration
 import expo.modules.medialibrary.next.extensions.resolver.queryAssetHeight
@@ -22,22 +22,26 @@ import expo.modules.medialibrary.next.objects.wrappers.MimeType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.lang.ref.WeakReference
 import kotlin.getValue
 
-class Asset(contentUri: Uri, val context: Context) : SharedObject() {
+class Asset(contentUri: Uri, context: Context) : SharedObject() {
+  private val contextRef = WeakReference(context)
+
+  private val contentResolver
+    get() = contextRef
+      .getOrThrow()
+      .contentResolver ?: throw Exception()
+
   val assetDelegate by lazy {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-      AssetModernDelegate(contentUri, context)
+      AssetModernDelegate(contentUri, contextRef.getOrThrow())
     } else {
-      AssetLegacyDelegate(contentUri, context)
+      AssetLegacyDelegate(contentUri, contextRef.getOrThrow())
     }
   }
 
   val contentUri: Uri get() = assetDelegate.contentUri
-
-  private val contentResolver by lazy {
-    context.contentResolver ?: throw Exceptions.ReactContextLost()
-  }
 
   suspend fun getCreationTime(): Long? =
     contentResolver
@@ -45,7 +49,7 @@ class Asset(contentUri: Uri, val context: Context) : SharedObject() {
       .takeIf { it != 0L }
 
   suspend fun getDuration(): Long? {
-    return if (getMimeType()?.isVideo() == true) {
+    return if (getMimeType().isVideo()) {
       contentResolver
         .queryAssetDuration(contentUri)
         .takeIf { it != 0L }
