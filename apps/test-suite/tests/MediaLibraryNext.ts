@@ -4,10 +4,10 @@ import { Platform } from 'react-native';
 
 export const name = 'MediaLibrary@Next';
 
+const mp3Path = require('../assets/LLizard.mp3');
+const mp4Path = require('../assets/big_buck_bunny.mp4');
 const pngPath = require('../assets/icons/app.png');
 const jpgPath = require('../assets/qrcode_expo.jpg');
-const mp4Path = require('../assets/big_buck_bunny.mp4');
-const mp3Path = require('../assets/LLizard.mp3');
 
 export async function test(t) {
   let permissions;
