@@ -1,32 +1,72 @@
----
-title: Set up your environment
-description: Learn how to set up your development environment to start building with Expo.
-hideTOC: true
-searchRank: 3
----
+import React, { Suspense, useState } from "react"; import { Canvas } from "@react-three/fiber"; import { OrbitControls, Html } from "@react-three/drei";
 
-import { DevelopmentEnvironmentInstructions } from '~/scenes/get-started/set-up-your-environment/DevelopmentEnvironmentInstructions';
-import { DevelopmentModeForm } from '~/scenes/get-started/set-up-your-environment/DevelopmentModeForm';
-import { PlatformAndDeviceForm } from '~/scenes/get-started/set-up-your-environment/PlatformAndDeviceForm';
+/**
 
-Let's set up a local development environment for running your project on Android and iOS.
+Cusco 3D Explorer – Versión solo de Cusco
 
-## Where would you like to develop?
+🎨 Paleta inspirada en Cusco:
 
-We recommend using a real device to develop, since you'll get to see exactly what your users will see.
+Rojo Cusqueño (#7A1C1C)
 
-<PlatformAndDeviceForm />
 
-## How would you like to develop?
+Dorado Inca (#C5A100)
 
-Expo Go is a sandbox for trying out Expo quickly. A development build is a build of your own app that includes Expo's developer tools.
 
-<DevelopmentModeForm />
+Verde Andino (#3A5A40)
 
----
 
-<DevelopmentEnvironmentInstructions />
+Piedra Inca (#5C5C5C) */
 
-## Next step
 
-You have a project and a development environment. Now it's time to start developing.
+
+const Marker = ({ position, label }) => ( <mesh position={position}> <sphereGeometry args={[0.12, 16, 16]} /> <meshStandardMaterial color="#C5A100" /> <Html distanceFactor={10} style={{ color: "#7A1C1C", fontWeight: "bold" }}> {label} </Html> </mesh> );
+
+export default function Cusco3DExplorer() { return ( <div className="w-full h-screen flex bg-[#F5F3F0]"> {/* Panel lateral con info */} <div className="w-1/4 p-4 bg-[#7A1C1C] text-white flex flex-col gap-4"> <h1 className="text-2xl font-bold">Cusco Interactivo</h1> <p className="text-sm text-[#C5A100]">Explora los centros turísticos en 3D</p>
+
+<div className="mt-6 space-y-2">
+      <h2 className="text-lg font-semibold text-[#C5A100]">Centros Turísticos</h2>
+      <ul className="text-sm list-disc pl-4 space-y-1">
+        <li>Machu Picchu</li>
+        <li>Sacsayhuamán</li>
+        <li>Ollantaytambo</li>
+        <li>Pisac</li>
+        <li>Coricancha</li>
+        <li>Valle Sagrado</li>
+        <li>Chinchero</li>
+        <li>Catarata de Poc Poc</li>
+        <li>Iglesia de Huancapata</li>
+      </ul>
+    </div>
+  </div>
+
+  {/* Escena 3D */}
+  <div className="w-3/4 h-full">
+    <Canvas camera={{ position: [0, 3, 6], fov: 60 }}>
+      <ambientLight intensity={0.6} />
+      <directionalLight position={[10, 10, 5]} intensity={1.2} />
+      <OrbitControls />
+
+      <Suspense fallback={null}>
+        {/* Suelo */}
+        <mesh rotation-x={-Math.PI / 2}>
+          <planeGeometry args={[20, 20]} />
+          <meshStandardMaterial color="#5C5C5C" />
+        </mesh>
+
+        {/* Marcadores turísticos de Cusco */}
+        <Marker position={[-2, 0.2, -2]} label="Machu Picchu" />
+        <Marker position={[2, 0.2, -1]} label="Sacsayhuamán" />
+        <Marker position={[1, 0.2, 2]} label="Ollantaytambo" />
+        <Marker position={[-1, 0.2, 3]} label="Pisac" />
+        <Marker position={[0, 0.2, -3]} label="Coricancha" />
+        <Marker position={[3, 0.2, 1]} label="Valle Sagrado" />
+        <Marker position={[-3, 0.2, 1]} label="Chinchero" />
+        <Marker position={[2, 0.2, 3]} label="Catarata de Poc Poc" />
+        <Marker position={[-2, 0.2, 2]} label="Iglesia de Huancapata" />
+      </Suspense>
+    </Canvas>
+  </div>
+</div>
+
+); }
+
